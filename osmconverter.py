@@ -51,10 +51,10 @@ def main():
                     float(element.attrib['maxlat'])))
 
                 """ Update the XML file. """
-                element.update('minlon', min_proj.x)
-                element.update('minlat', min_proj.y)
-                element.update('maxlon', max_proj.x)
-                element.update('maxlat', max_proj.y)
+                element.set('minlon', min_proj.x)
+                element.set('minlat', min_proj.y)
+                element.set('maxlon', max_proj.x)
+                element.set('maxlat', max_proj.y)
             
             """ See if it is a Node. """
             if (element.tag == "node"):
@@ -65,8 +65,8 @@ def main():
                     float(element.attrib['lat'])))
 
                 """ Update the XML file. """
-                element.update('lon', node_proj.x)
-                element.update('lat', node_proj.y)
+                element.set('lon', node_proj.x)
+                element.set('lat', node_proj.y)
         
         """ Write the output to file. """
         et_data.write(sys.argv[3])
