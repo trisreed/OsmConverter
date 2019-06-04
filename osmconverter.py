@@ -67,6 +67,9 @@ def main():
                 """ Update the XML file. """
                 element.update('lon', node_proj.x)
                 element.update('lat', node_proj.y)
+        
+        """ Write the output to file. """
+        et_data.write(sys.argv[3])
 
     else:
 
