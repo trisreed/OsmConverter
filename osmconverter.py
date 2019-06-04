@@ -57,6 +57,18 @@ def main():
             
             """ See if it is a Node. """
             if (element.tag == "node"):
+
+                """ Create a DataFrame from this. """
+                node_gdf = geopandas.GeoDataFrame([{"geometry": shgeo.Point(
+                    float(element.attrib['lat']),
+                    float(element.attrib['lon']))}],
+                    crs = "epsg:" + sys.argv[2])
+
+                """ Adjust the GeoDataFrame to the correct one. """
+                node_gdf = node_gdf.to_crs(crs = "epsg:" + sys.argv[4])
+
+                """ Convert to a Dictionary. """
+                node_dict = node_dict.to_dict()
                 #print(element.attrib)
 
     else:
