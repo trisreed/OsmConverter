@@ -14,8 +14,8 @@ __version__ = "0.1.0"
 
 
 """ Import required libraries. """
-import json, geopandas, sys, textwrap, tqdm
-import shapely.geometry as shgeo
+import functools, json, pyproj, sys, textwrap, tqdm
+import shapely.geometry, shapely.ops # macOS is weird.
 import xml.etree.ElementTree as ElementTree
 
 
@@ -27,51 +27,46 @@ def main():
         """ Open up the input file using ElementTree. """
         et_data = ElementTree.parse(sys.argv[1])
 
+        """ Create the Input and Output EPSG PyProj objects. """
+        source_proj = pyproj.Proj(init = 'epsg:' + sys.argv[2])
+        dest_proj = pyproj.Proj(init = 'epsg:' + sys.argv[4])
+
+        """ Create the Projection function. """
+        projection = functools.partial(pyproj.transform, source_proj, dest_proj)
+
         """ Iterate through each element. """
         for element in tqdm.tqdm(et_data.getroot()):
 
-            # """ See if it is the Bounds. """
-            # if (element.tag == "bounds"):
+            """ See if it is the Bounds. """
+            if (element.tag == "bounds"):
 
-                # """ Create a DataFrame from this. """
-                # bounds_gdf = geopandas.GeoDataFrame([
-                #     {"name": "min", "geometry": shgeo.Point(
-                #         float(element.attrib['minlon']), 
-                #         float(element.attrib['minlat']))},
-                #     {"name": "max", "geometry": shgeo.Point(
-                #         float(element.attrib['maxlon']), 
-                #         float(element.attrib['maxlat']))}], 
-                #     crs = "epsg:" + sys.argv[2])
+                """ Project the minimun values. """
+                min_proj = shapely.ops.transform(projection, 
+                    shapely.geometry.Point(float(element.attrib['minlon']), 
+                    float(element.attrib['minlat'])))
 
-                # """ Adjust the GeoDataFrame to the correct one. """
-                # bounds_gdf = bounds_gdf.to_crs(crs = "epsg:" + sys.argv[4])
+                """ Project the maximum values. """
+                max_proj = shapely.ops.transform(projection, 
+                    shapely.geometry.Point(float(element.attrib['maxlon']), 
+                    float(element.attrib['maxlat'])))
 
-                # """ Convert to a Dictionary. """
-                # bounds_dict = bounds_gdf.to_dict()
-
-                # """ Update the XML file. """
-                # print(bounds_dict)
-                # element.update('minlon')
-                # element.update('minlat')
-                # element.update('maxlon')
+                """ Update the XML file. """
+                element.update('minlon', min_proj.x)
+                element.update('minlat', min_proj.y)
+                element.update('maxlon', max_proj.x)
+                element.update('maxlat', max_proj.y)
             
             """ See if it is a Node. """
             if (element.tag == "node"):
 
-                """ Create a DataFrame from this. """
-                node_gdf = geopandas.GeoDataFrame(geometry = [shgeo.Point(
-                    float(element.attrib['lon']), float(element.attrib['lat']))], 
-                    crs = "epsg:" + sys.argv[2])
-
-                """ Adjust the GeoDataFrame to the correct one. """
-                node_gdf = node_gdf.to_crs(crs = "epsg:" + sys.argv[4])
-
-                """ Convert to a Dictionary. """
-                node_dict = node_gdf.to_dict()
+                """ Project the maximum values. """
+                node_proj = shapely.ops.transform(projection, 
+                    shapely.geometry.Point(float(element.attrib['lon']), 
+                    float(element.attrib['lat'])))
 
                 """ Update the XML file. """
-                element.update('lat', node_dict['geometry'][0].y)
-                element.update('lon', node_dict['geometry'][0].x)
+                element.update('lon', node_proj.x)
+                element.update('lat', node_proj.y)
 
     else:
 
