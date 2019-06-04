@@ -14,7 +14,7 @@ __version__ = "0.1.0"
 
 
 """ Import required libraries. """
-import json, geopandas, sys, textwrap
+import json, geopandas, sys, textwrap, tqdm
 import shapely.geometry as shgeo
 import xml.etree.ElementTree as ElementTree
 
@@ -28,29 +28,29 @@ def main():
         et_data = ElementTree.parse(sys.argv[1])
 
         """ Iterate through each element. """
-        for element in et_data.getroot():
+        for element in tqdm.tqdm(et_data.getroot()):
 
-            """ See if it is the Bounds. """
-            if (element.tag == "bounds"):
+            # """ See if it is the Bounds. """
+            # if (element.tag == "bounds"):
 
-                """ Create a DataFrame from this. """
-                bounds_gdf = geopandas.GeoDataFrame([
-                    {"name": "min", "geometry": shgeo.Point(
-                        float(element.attrib['minlon']), 
-                        float(element.attrib['minlat']))},
-                    {"name": "max", "geometry": shgeo.Point(
-                        float(element.attrib['maxlon']), 
-                        float(element.attrib['maxlat']))}], 
-                    crs = "epsg:" + sys.argv[2])
+                # """ Create a DataFrame from this. """
+                # bounds_gdf = geopandas.GeoDataFrame([
+                #     {"name": "min", "geometry": shgeo.Point(
+                #         float(element.attrib['minlon']), 
+                #         float(element.attrib['minlat']))},
+                #     {"name": "max", "geometry": shgeo.Point(
+                #         float(element.attrib['maxlon']), 
+                #         float(element.attrib['maxlat']))}], 
+                #     crs = "epsg:" + sys.argv[2])
 
-                """ Adjust the GeoDataFrame to the correct one. """
-                bounds_gdf = bounds_gdf.to_crs(crs = "epsg:" + sys.argv[4])
+                # """ Adjust the GeoDataFrame to the correct one. """
+                # bounds_gdf = bounds_gdf.to_crs(crs = "epsg:" + sys.argv[4])
 
-                """ Convert to a Dictionary. """
-                bounds_dict = bounds_gdf.to_dict()
+                # """ Convert to a Dictionary. """
+                # bounds_dict = bounds_gdf.to_dict()
 
-                """ Update the XML file. """
-                print(bounds_dict)
+                # """ Update the XML file. """
+                # print(bounds_dict)
                 # element.update('minlon')
                 # element.update('minlat')
                 # element.update('maxlon')
@@ -59,17 +59,19 @@ def main():
             if (element.tag == "node"):
 
                 """ Create a DataFrame from this. """
-                node_gdf = geopandas.GeoDataFrame([{"geometry": shgeo.Point(
-                    float(element.attrib['lat']),
-                    float(element.attrib['lon']))}],
+                node_gdf = geopandas.GeoDataFrame(geometry = [shgeo.Point(
+                    float(element.attrib['lon']), float(element.attrib['lat']))], 
                     crs = "epsg:" + sys.argv[2])
 
                 """ Adjust the GeoDataFrame to the correct one. """
                 node_gdf = node_gdf.to_crs(crs = "epsg:" + sys.argv[4])
 
                 """ Convert to a Dictionary. """
-                node_dict = node_dict.to_dict()
-                #print(element.attrib)
+                node_dict = node_gdf.to_dict()
+
+                """ Update the XML file. """
+                element.update('lat', node_dict['geometry'][0].y)
+                element.update('lon', node_dict['geometry'][0].x)
 
     else:
 
