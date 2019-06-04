@@ -24,12 +24,6 @@ def main():
     """ Check that we have supplied four arguments. """
     if (len(sys.argv) == 5):
 
-        # """ Open up the input file. """
-        # in_ptr = open(sys.argv[1], 'r')
-
-        # """ Convert to an ElementTree. """
-        # et_data = ElementTree.fromstring(in_ptr.read())
-
         """ Open up the input file using ElementTree. """
         et_data = ElementTree.parse(sys.argv[1])
 
@@ -38,28 +32,32 @@ def main():
 
             """ See if it is the Bounds. """
             if (element.tag == "bounds"):
-                # """ Store the Origin value. """
-                # the_origin = element.attrib["origin"]
 
                 """ Create a DataFrame from this. """
                 bounds_gdf = geopandas.GeoDataFrame([
                     {"name": "min", "geometry": shgeo.Point(
-                        float(element.attrib['minlon']), float(element.attrib['minlat']))},
+                        float(element.attrib['minlon']), 
+                        float(element.attrib['minlat']))},
                     {"name": "max", "geometry": shgeo.Point(
-                        float(element.attrib['maxlon']), float(element.attrib['maxlat']))}], 
-                crs = sys.argv[2])
+                        float(element.attrib['maxlon']), 
+                        float(element.attrib['maxlat']))}], 
+                    crs = "epsg:" + sys.argv[2])
 
                 """ Adjust the GeoDataFrame to the correct one. """
-                bounds_gdf = bounds_gdf.to_crs(crs = sys.argv[4])
+                bounds_gdf = bounds_gdf.to_crs(crs = "epsg:" + sys.argv[4])
 
                 """ Convert to a Dictionary. """
                 bounds_dict = bounds_gdf.to_dict()
 
+                """ Update the XML file. """
                 print(bounds_dict)
+                # element.update('minlon')
+                # element.update('minlat')
+                # element.update('maxlon')
             
             """ See if it is a Node. """
             if (element.tag == "node"):
-                print(element.attrib)
+                #print(element.attrib)
 
     else:
 
