@@ -34,42 +34,46 @@ def main():
         source_proj = pyproj.Proj(init = 'epsg:' + sys.argv[2])
         dest_proj = pyproj.Proj(init = 'epsg:' + sys.argv[4])
 
-        """ Create the Projection function. """
-        projection = functools.partial(pyproj.transform, source_proj, dest_proj)
-
         """ Iterate through each element. """
         for element in tqdm.tqdm(et_data.getroot()):
 
             """ See if it is the Bounds. """
             if (element.tag == "bounds"):
 
-                """ Project the minimun values. """
-                min_proj = shapely.ops.transform(projection, 
-                    shapely.geometry.Point(float(element.attrib['minlon']), 
-                    float(element.attrib['minlat'])))
+                """ Get the four values from the XML. """
+                min_lon = float(element.attrib['minlon'])
+                min_lat = float(element.attrib['minlat'])
+                max_lon = float(element.attrib['maxlon'])
+                max_lat = float(element.attrib['maxlat'])
+
+                """ Project the minimum values. """
+                min_x, min_y = pyproj.transform(source_proj, dest_proj, min_lon, 
+                    min_lat)
 
                 """ Project the maximum values. """
-                max_proj = shapely.ops.transform(projection, 
-                    shapely.geometry.Point(float(element.attrib['maxlon']), 
-                    float(element.attrib['maxlat'])))
+                max_x, max_y = pyproj.transform(source_proj, dest_proj, max_lon, 
+                    max_lat)
 
                 """ Update the XML file. """
-                element.set('minlon', min_proj.x)
-                element.set('minlat', min_proj.y)
-                element.set('maxlon', max_proj.x)
-                element.set('maxlat', max_proj.y)
+                element.set('minlon', min_x)
+                element.set('minlat', min_y)
+                element.set('maxlon', max_x)
+                element.set('maxlat', max_y)
             
             """ See if it is a Node. """
             if (element.tag == "node"):
 
-                """ Project the maximum values. """
-                node_proj = shapely.ops.transform(projection, 
-                    shapely.geometry.Point(float(element.attrib['lon']), 
-                    float(element.attrib['lat'])))
+                """ Get the two values from the XML. """
+                lon = float(element.attrib['lon'])
+                lat = float(element.attrib['lat'])
+
+                """ Project the  values. """
+                node_x, node_y = pyproj.transform(source_proj, dest_proj, lon, 
+                    lat)
 
                 """ Update the XML file. """
-                element.set('lon', node_proj.x)
-                element.set('lat', node_proj.y)
+                element.set('lon', node_x)
+                element.set('lat', node_y)
         
         """ Write the output to file. """
         et_data.write(sys.argv[3])
