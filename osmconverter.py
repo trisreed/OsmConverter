@@ -14,15 +14,11 @@ __version__ = "0.1.0"
 
 
 """ Import required libraries. """
-import functools, json, pyproj, sys, textwrap, tqdm
-import shapely.geometry, shapely.ops, shapely.speedups # macOS is weird.
+import pyproj, sys, textwrap, tqdm
 import xml.etree.cElementTree as ElementTree
 
 
 def main():
-
-    """ Enable speedups. """
-    shapely.speedups.enable()
 
     """ Check that we have supplied four arguments. """
     if (len(sys.argv) == 5):
